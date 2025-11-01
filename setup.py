@@ -30,6 +30,8 @@ setup(
         "passlib[bcrypt]>=1.7.4",
         "python-jose[cryptography]>=3.3.0",
         "python-dotenv>=1.0.0",
+        "greenlet>=3.0.0",
+        "requests>=2.31.0",
     ],
     extras_require={
         "test": [

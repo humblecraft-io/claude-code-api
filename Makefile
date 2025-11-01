@@ -1,25 +1,52 @@
 # Claude Code API - Simple & Working
 
+# Virtual environment settings
+VENV_DIR = venv
+VENV_BIN = $(VENV_DIR)/bin
+PYTHON = $(VENV_BIN)/python
+PIP = $(VENV_BIN)/pip
+
 # Python targets
-install:
-	pip install -e .
-	pip install requests
+.PHONY: venv
+venv:
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "Creating virtual environment..."; \
+		python3 -m venv $(VENV_DIR); \
+		echo "Virtual environment created at $(VENV_DIR)"; \
+		echo ""; \
+		echo "To activate it manually, run:"; \
+		echo "  source $(VENV_BIN)/activate"; \
+	else \
+		echo "Virtual environment already exists at $(VENV_DIR)"; \
+	fi
+
+install: venv
+	@echo "Installing dependencies in virtual environment..."
+	$(PIP) install --upgrade pip
+	$(PIP) install -e .
+	@echo ""
+	@echo "✓ Installation complete!"
+	@echo "To use the venv, run: source $(VENV_BIN)/activate"
 
 test:
-	python -m pytest tests/ -v
+	$(PYTHON) -m pytest tests/ -v
 
 test-real:
-	python tests/test_real_api.py
+	$(PYTHON) tests/test_real_api.py
 
 start:
-	uvicorn claude_code_api.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude="*.db*" --reload-exclude="*.log"
+	$(VENV_BIN)/uvicorn claude_code_api.main:app --host 0.0.0.0 --port 8000 --reload --reload-exclude="*.db*" --reload-exclude="*.log"
 
 start-prod:
-	uvicorn claude_code_api.main:app --host 0.0.0.0 --port 8000
+	$(VENV_BIN)/uvicorn claude_code_api.main:app --host 0.0.0.0 --port 8000
 
 clean:
 	find . -name "*.pyc" -delete
 	find . -name "__pycache__" -delete
+
+clean-venv:
+	rm -rf $(VENV_DIR)
+	@echo "Virtual environment removed"
 
 kill:
 	@if [ -z "$(PORT)" ]; then \
@@ -43,7 +70,8 @@ help:
 	@echo "Claude Code API Commands:"
 	@echo ""
 	@echo "Python API:"
-	@echo "  make install     - Install Python dependencies"
+	@echo "  make venv        - Create virtual environment"
+	@echo "  make install     - Install Python dependencies (creates venv if needed)"
 	@echo "  make test        - Run Python unit tests with real Claude integration"
 	@echo "  make test-real   - Run REAL end-to-end tests (curls actual API)"
 	@echo "  make start       - Start Python API server (development with reload)"
@@ -60,6 +88,7 @@ help:
 	@echo ""
 	@echo "General:"
 	@echo "  make clean       - Clean up Python cache files"
+	@echo "  make clean-venv  - Remove virtual environment"
 	@echo "  make kill PORT=X - Kill process on specific port"
 	@echo ""
 	@echo "IMPORTANT: Both implementations are functionally equivalent!"
